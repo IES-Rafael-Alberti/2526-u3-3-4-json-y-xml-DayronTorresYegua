@@ -1,5 +1,8 @@
 import json
+import os
 
+def limpiar_consola():
+    os.system("cls" if os.name == "nt" else "clear")
 
 def cargar_json(nombre_fichero: str) -> dict:
     """
@@ -107,6 +110,8 @@ def main():
     """
     Función principal que realiza las operaciones de gestión de un archivo JSON.
     """
+    
+    limpiar_consola()
     # Nombre del fichero JSON
     nombre_fichero = "src/datos_usuarios.json"
 

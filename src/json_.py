@@ -4,22 +4,26 @@ import os
 def limpiar_consola():
     os.system("cls" if os.name == "nt" else "clear")
 
-def cargar_json(nombre_fichero: str) -> dict:
+def pausar():
+    
+    input("\nPresione una tecla para continuar . . . \n")
+
+def cargar_json(fichero_origen: str) -> dict:
     """
     Carga el contenido de un fichero JSON.
 
     Args:
-        nombre_fichero (str): Nombre del fichero JSON.
+        fichero_origen (str): Nombre del fichero JSON.
 
     Returns:
         (dict): Contenido del archivo JSON como un diccionario, o None si no se pudo cargar.
     """
     try:
-        with open(nombre_fichero, "r") as archivo:
+        with open(fichero_origen, "r") as archivo:
             return json.load(archivo)
 
     except FileNotFoundError:
-        print(f"*ERROR* El archivo {nombre_fichero} no existe.")
+        print(f"*ERROR* El archivo {fichero_origen} no existe.")
 
     except json.JSONDecodeError:
         print("*ERROR* El archivo JSON tiene un formato incorrecto.")
@@ -30,20 +34,20 @@ def cargar_json(nombre_fichero: str) -> dict:
     return None
 
 
-def guardar_json(nombre_fichero: str, datos: dict):
+def guardar_json(fichero_origen: str, datos: dict):
     """
     Guarda los datos en un fichero JSON.
 
     Args:
-        nombre_fichero (str): Nombre del fichero JSON.
+        fichero_origen (str): Nombre del fichero JSON.
         datos (dict): Datos a guardar.
     """
     try:
-        with open(nombre_fichero, "w") as archivo:
+        with open(fichero_origen, "w") as archivo:
             json.dump(datos, archivo, indent = 4)
 
     except PermissionError:
-        print(f"*ERROR* No tienes permisos para escribir en el archivo '{nombre_fichero}'.")
+        print(f"*ERROR* No tienes permisos para escribir en el archivo '{fichero_origen}'.")
 
     except TypeError as e:
         print(f"*ERROR* Los datos no son serializables a JSON. Detalle: {e}")        
@@ -101,10 +105,35 @@ def eliminar_usuario(datos: dict, id_usuario: int):
 def mostrar_datos(datos:dict):
     
     print("--- Contenido Actual del JSON ---")
-    for usuario in datos["usuarios"]:
-        print(f"ID: {usuario['id']}, Nombre: {usuario['nombre']}, Edad: {usuario['edad']}")
+    if "usuarios" not in datos or len(datos["usuarios"]) == 0:
+        print("ERROR El archivo JSON no contiene usuarios!")
         
+    else:
+        for usuario in datos["usuarios"]:
+            print(f"ID: {usuario['id']}, Nombre: {usuario['nombre']}, Edad: {usuario['edad']}")
     print("--- Fin del Contenido ---")
+
+def inicializar_datos(archivo_origen:str, archivo_destino:str):
+
+    try:
+        
+        if not os.path.exists(archivo_origen):
+            print(f"El archivo origen no existe")
+            return
+        
+        with open(archivo_origen, "r") as origen:
+            datos_origen = json.load(origen)
+            
+        with open(archivo_destino, "w") as destino:
+            json.dump(datos_origen, destino, indent=4)
+        
+        print(f"Datos inicializados desde '{archivo_origen}' a '{archivo_destino}'.\n")
+    except json.JSONDecodeError:
+        print(f"ERROR El archivo origen '{archivo_origen}' tiene un formato JSON inválido.")
+        
+    except Exception:
+        print(f"ERROR El archivo origen '{archivo_origen}' no existe. No se realizó la copia.")
+        
 
 def main():
     """
@@ -113,30 +142,38 @@ def main():
     
     limpiar_consola()
     # Nombre del fichero JSON
-    nombre_fichero = "src/datos_usuarios.json"
-
+    fichero_origen = "src/datos_usuarios_orig.json"
+    fichero_destino = "src/datos_usuarios.json"
+    
+    inicializar_datos(fichero_origen, fichero_destino)
+    
     # 1. Cargar datos desde el fichero JSON
-    datos = cargar_json(nombre_fichero)
+    datos = cargar_json(fichero_destino)
 
     if datos is None:
         # Inicializamos datos vacíos si hay error
         datos = {"usuarios": []}
 
+    
+    mostrar_datos(datos)
+    pausar()
     # 2. Actualizar la edad de un usuario
     actualizar_usuario(datos, id_usuario = 1, nueva_edad = 31)
-
+    mostrar_datos(datos)
+    pausar()
     # 3. Insertar un nuevo usuario
     nuevo_usuario = {"id": 3, "nombre": "Pedro", "edad": 40}
     insertar_usuario(datos, nuevo_usuario)
-
+    mostrar_datos(datos)
+    pausar()
     # 4. Eliminar un usuario
     eliminar_usuario(datos, id_usuario = 2)
-
+    mostrar_datos(datos)
+    pausar()
     # 5. Guardar los datos de nuevo en el fichero JSON
-    guardar_json(nombre_fichero, datos)
+    guardar_json(fichero_destino, datos)
 
     print("Operaciones completadas. Archivo actualizado.\n")
-    mostrar_datos(datos)
 
 if __name__ == "__main__":
     main()
